@@ -104,15 +104,16 @@ public class Quiz {
     String getCycle(ArrayList<Integer> parent, int startNode)
     {
         var saveStart = startNode;
-        List<String> Cycle = new ArrayList<>(Arrays.asList(String.valueOf(startNode)));
+        ArrayList<String> cycle = new ArrayList<>(Arrays.asList(String.valueOf(startNode)));
         startNode = parent.get(startNode);
         while(startNode != saveStart)
         {
-            Cycle.add(String.valueOf(startNode));
+            cycle.add(String.valueOf(startNode));
             startNode = parent.get(startNode);
         }
-        Cycle.add(String.valueOf(startNode));
-        return String.join("-", Cycle);
+        cycle.add(String.valueOf(startNode));
+        Collections.reverse(cycle);
+        return String.join("->", cycle);
     }
 
 
