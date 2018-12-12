@@ -11,6 +11,7 @@ public class QuizRunner implements IGame {
     protected final String noSuchAnswer = "Такого варианта ответа нет. Попробуй ещё раз";
     protected final String quizFinished = "Тест пройден. ";
     protected final String inviteFriend = "\n\nПригласи друга пройти опрос, отправив эту ссылку: https://t.me/%s?start=%d";
+    protected final String quizNotFound = "Опрос не найден либо был удалён.";
 
     QuizRunner(String botUsername, DatabaseWorker db) {
         this.botUsername = botUsername;
@@ -27,7 +28,11 @@ public class QuizRunner implements IGame {
         Pair<Integer, Integer> gameData = getGameData(userId);
         int currentQuizId = gameData.getFirst();
         int currentQuestionId = gameData.getSecond();
-        Quiz quiz = Objects.requireNonNull(loadQuiz(currentQuizId));
+        Quiz quiz = loadQuiz(currentQuizId);
+        if (quiz == null) {
+            stop(userId);
+            return new ChatBotReply(quizNotFound);
+        }
 
         if (!quiz.answersIndexes.containsKey(request)) {
             return new ChatBotReply(noSuchAnswer, quiz.getAnswersList(currentQuestionId));
