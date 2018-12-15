@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 class ChatBot {
     private QuizRunner runner;
     private DatabaseWorker db;
+    private List<Long> admins;
 
     protected final String quizNotActive = "Игра ещё не началась. Чтобы посмотреть " +
             "список доступных опросов, напиши команду /start";
@@ -23,17 +24,23 @@ class ChatBot {
     protected final String invited = "Привет! Давай пройдём опрос, который тебе прислал твой друг.\n\n";
     protected final String btnAddQuiz = "➕ Добавить опрос";
     protected final String btnListQuiz = "❓ Список опросов";
-    protected final String btnAddAdmin = "✨ Добавить админа";
+    protected final String btnAddModerator = "✨ Добавить модератора";
+    protected final String btnRemoveModerator = "\uD83D\uDD2A Удалить модератора";
     protected final String btnCancel = "❌ Отмена";
-    protected final String stateAddAdmin = "add-admin";
-    protected final String addAdmin = "Пришлите id нового администратора.";
-    protected final String incorrectAdminId = "Пожалуйста, укажите корректный id.";
+    protected final String stateAddModerator = "add-moderator";
+    protected final String stateRemoveModerator = "remove-moderator";
+    protected final String addModerator = "Пришлите id нового модератора.";
+    protected final String removeModerator = "Пришлите id модератора для удаления.";
+    protected final String incorrectModeratorId = "Пожалуйста, укажите корректный id.";
     protected final String returnToHome = "\nВозвращаемся в главное меню.";
-    protected final String adminAdded = "Администратор добавлен.";
+    protected final String moderatorAdded = "Модератор добавлен.";
     protected final String quizDeleted = "Опрос успешно удалён";
     protected final String noQuizzes = "Нет доступных опросов";
     protected final String quizAccepted = "Опрос добавлен всем пользователям";
     protected final String quizNotAvailable = "Опрос недоступен";
+
+    protected final String delete = "DELETE";
+    protected final String accept = "ACCEPT";
 
     protected final Pattern quizSelection = Pattern.compile("[0-9]+:[ A-Za-zА-Яа-я?,.-]+");
 
@@ -43,12 +50,13 @@ class ChatBot {
 
     protected HashMap<Long, String> state = new HashMap<>();
 
-    ChatBot(String botUsername, DatabaseWorker db) {
+    ChatBot(String botUsername, DatabaseWorker db, List<Long> admins) {
         runner = new QuizRunner(botUsername, db);
         this.db = db;
         this.db.connect();
+        this.admins = admins;
         cancelKeyboard.add(Collections.singletonList(btnCancel));
-        adminKeyboard.add(Arrays.asList(btnListQuiz, btnAddQuiz, btnAddAdmin));
+        adminKeyboard.add(Arrays.asList(btnListQuiz, btnAddQuiz, btnAddModerator, btnRemoveModerator));
         userKeyboard.add(Arrays.asList(btnListQuiz, btnAddQuiz));
     }
 
@@ -59,15 +67,25 @@ class ChatBot {
                 return new ChatBotReply(returnToHome, getKeyboard(userId));
             }
             switch (state.get(userId)) {
-                case stateAddAdmin:
+                case stateAddModerator:
                     try {
-                        long adminId = Long.parseLong(message);
-                        db.addAdmin(adminId);
+                        long moderatorId = Long.parseLong(message);
+                        db.addModerator(moderatorId);
                         state.remove(userId);
-                        return new ChatBotReply(adminAdded + returnToHome, getKeyboard(userId));
+                        return new ChatBotReply(moderatorAdded + returnToHome, getKeyboard(userId));
                     }
                     catch (NumberFormatException e) {
-                        return new ChatBotReply(incorrectAdminId, cancelKeyboard);
+                        return new ChatBotReply(incorrectModeratorId, cancelKeyboard);
+                    }
+                case stateRemoveModerator:
+                    try {
+                        long moderatorId = Long.parseLong(message);
+                        db.removeModerator(moderatorId);
+                        state.remove(userId);
+                        return new ChatBotReply(returnToHome, getKeyboard(userId));
+                    }
+                    catch (NumberFormatException e) {
+                        return new ChatBotReply(incorrectModeratorId, cancelKeyboard);
                     }
                 default:
                     state.remove(userId);
@@ -88,7 +106,7 @@ class ChatBot {
                     return new ChatBotReply(addQuiz);
             case "/list":
             case btnListQuiz:
-                var allQuizzes = getQuizzesList(db.isAdmin(userId));
+                var allQuizzes = getQuizzesList(isPrivileged(userId));
                 if (allQuizzes.size() == 0)
                     return new ChatBotReply(noQuizzes + returnToHome, getKeyboard(userId));
                 return new ChatBotReply(quizzesList, allQuizzes);
@@ -98,9 +116,12 @@ class ChatBot {
                     return new ChatBotReply(quizNotActive);
                 runner.stop(userId);
                 return new ChatBotReply(quizEnded);
-            case btnAddAdmin:
-                state.put(userId, stateAddAdmin);
-                return new ChatBotReply(addAdmin, cancelKeyboard);
+            case btnAddModerator:
+                state.put(userId, stateAddModerator);
+                return new ChatBotReply(addModerator, cancelKeyboard);
+            case btnRemoveModerator:
+                state.put(userId, stateRemoveModerator);
+                return new ChatBotReply(removeModerator, cancelKeyboard);
             default:
                 if (runner.isActive(userId)) {
                     if (message.startsWith("/start"))
@@ -120,15 +141,15 @@ class ChatBot {
                     } else if (message.startsWith("/start")) {
                         return startQuizFromInvite(message, userId);
                     }
-                    else if (message.startsWith("DELETE")) {
-                        if (!db.isAdmin(userId))
+                    else if (message.startsWith(delete)) {
+                        if (!isPrivileged(userId))
                             return new ChatBotReply(unrecognized);
                         db.deleteQuiz(Integer.parseInt(message.split(" ")[1]));
                         return new ChatBotReply(quizDeleted + returnToHome, getKeyboard(userId));
                     }
-                    else if (message.startsWith("ACCEPT"))
+                    else if (message.startsWith(accept))
                     {
-                        if (!db.isAdmin(userId))
+                        if (!isPrivileged(userId))
                             return new ChatBotReply(unrecognized);
                         db.markUnhidden(Integer.parseInt(message.split(" ")[1]));
                         return new ChatBotReply(quizAccepted + returnToHome, getKeyboard(userId));
@@ -140,7 +161,7 @@ class ChatBot {
 
     ChatBotReply startQuiz(long userId, int quizId, boolean fromInvite) {
         if (!runner.start(userId, quizId))
-            return new ChatBotReply(quizNotFound, getQuizzesList(db.isAdmin(userId)));
+            return new ChatBotReply(quizNotFound, getQuizzesList(isPrivileged(userId)));
         ChatBotReply firstQuestion = runner.proceedRequest("", userId);
         if (fromInvite)
             return new ChatBotReply(invited + runner.getInitialMessage(quizId) +
@@ -158,7 +179,7 @@ class ChatBot {
             runner.stop(userId);
             return startQuiz(userId, quizId, true);
         } catch (Exception e) {
-            return new ChatBotReply(start, getQuizzesList(db.isAdmin(userId)));
+            return new ChatBotReply(start, getQuizzesList(isPrivileged(userId)));
         }
     }
 
@@ -168,27 +189,28 @@ class ChatBot {
                 return new ChatBotReply(quizParseError);
             Quiz quiz = new Quiz(content, db);
             quiz.checkValidity();
-            db.addQuiz(Serializer.serialize(quiz), !db.isAdmin(userId));
+            db.addQuiz(Serializer.serialize(quiz), !isPrivileged(userId));
         } catch (QuizException e) {
             return new ChatBotReply(String.format(quizParseError, e.message));
         }
         return new ChatBotReply(quizAdded + returnToHome, getKeyboard(userId));
     }
 
-    List<List<String>> getQuizzesList(boolean isAdmin) {
+    List<List<String>> getQuizzesList(boolean isModerator) {
         var quizzes = db.getQuizzesList();
         List<List<String>> options = new ArrayList<>();
         for (var e : quizzes) {
-            if (!isAdmin && e.getValue2())
+            if (!isModerator && e.getValue2())
                 continue;
             options.add(new ArrayList<>());
-            options.get(options.size() - 1).add(String.format("%s: %s", e.getValue0(), e.getValue1()));
-            if (isAdmin)
+            int index = options.size() - 1;
+            options.get(index).add(String.format("%s: %s", e.getValue0(), e.getValue1()));
+            if (isModerator)
             {
-                options.get(options.size() - 1).add(String.format("DELETE %s", e.getValue0()));
+                options.get(index).add(String.format("%s %s", delete, e.getValue0()));
                 if (e.getValue2())
                 {
-                    options.get(options.size() - 1).add(String.format("ACCEPT %s", e.getValue0()));
+                    options.get(index).add(String.format("%s %s", accept, e.getValue0()));
                 }
             }
         }
@@ -196,6 +218,10 @@ class ChatBot {
     }
 
     List<List<String>> getKeyboard(long userId) {
-        return db.isAdmin(userId) ? adminKeyboard : userKeyboard;
+        return admins.contains(userId) ? adminKeyboard : userKeyboard;
+    }
+
+    boolean isPrivileged(long userId) {
+        return db.isModerator(userId) || admins.contains(userId);
     }
 }

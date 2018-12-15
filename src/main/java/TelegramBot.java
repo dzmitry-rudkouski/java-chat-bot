@@ -33,11 +33,18 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     protected final String vkShareUrl = "https://vk.com/share.php?url=%s&title=%s&image=%s";
 
-    TelegramBot(String username, String token, DefaultBotOptions botOptions, DatabaseWorker db) {
+    TelegramBot(String username, String token, DefaultBotOptions botOptions, DatabaseWorker db, String adminsString) {
         super(botOptions);
-        chatBot = new ChatBot(username, db);
+
+        List<Long> admins = new ArrayList<>();
+        for (String i: adminsString.split(", ")) {
+            admins.add(Long.parseLong(i));
+        }
+
+        chatBot = new ChatBot(username, db, admins);
         botUsername = username;
         botToken = token;
+
     }
 
     @Override

@@ -1,6 +1,5 @@
 package database;
 
-import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.glassfish.grizzly.utils.Pair;
 import org.javatuples.Triplet;
 
@@ -61,9 +60,9 @@ public class DatabaseWorker {
                     "hidden BOOLEAN NOT NULL)";
             stmt.executeUpdate(quizzes);
 
-            String admins = "CREATE TABLE IF NOT EXISTS admins(" +
+            String moderators = "CREATE TABLE IF NOT EXISTS moderators(" +
                     "id BIGINT PRIMARY KEY NOT NULL)";
-            stmt.executeUpdate(admins);
+            stmt.executeUpdate(moderators);
             stmt.close();
 
         }
@@ -73,13 +72,13 @@ public class DatabaseWorker {
         }
     }
 
-    public void addAdmin(long userId) {
+    public void addModerator(long userId) {
         try {
             checkConnection();
 
-            if (isAdmin(userId))
+            if (isModerator(userId))
                 return;
-            PreparedStatement stmt = c.prepareStatement("INSERT INTO admins VALUES (?);");
+            PreparedStatement stmt = c.prepareStatement("INSERT INTO moderators VALUES (?);");
             stmt.setLong(1, userId);
             stmt.executeUpdate();
             stmt.close();
@@ -88,11 +87,11 @@ public class DatabaseWorker {
         }
     }
 
-    public boolean isAdmin(long userId) {
+    public boolean isModerator(long userId) {
         try {
             checkConnection();
 
-            PreparedStatement stmt = c.prepareStatement("SELECT COUNT(*) FROM admins WHERE id = ?;");
+            PreparedStatement stmt = c.prepareStatement("SELECT COUNT(*) FROM moderators WHERE id = ?;");
             stmt.setLong(1, userId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next())
@@ -101,6 +100,19 @@ public class DatabaseWorker {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public void removeModerator(long userId) {
+        try {
+            checkConnection();
+
+            PreparedStatement stmt = c.prepareStatement("DELETE FROM moderators WHERE id = ?");
+            stmt.setLong(1, userId);
+            stmt.executeUpdate();
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void addQuiz(QuizDataSet quiz, Boolean isHidden) {
@@ -132,7 +144,7 @@ public class DatabaseWorker {
     {
         try
         {
-            PreparedStatement stmt = c.prepareStatement("UPDATE quizzes SET hidden = FALSE WHERE id = ?");
+            PreparedStatement stmt = c.prepareStatement("UPDATE quizzes SET hidden = FALSE WHERE id = ?;");
             stmt.setInt(1, quizId);
             stmt.executeUpdate();
             stmt.close();
@@ -163,7 +175,7 @@ public class DatabaseWorker {
     public void deleteQuiz(int quizId)
     {
         try {
-            PreparedStatement stmt = c.prepareStatement("DELETE FROM quizzes WHERE id = ?");
+            PreparedStatement stmt = c.prepareStatement("DELETE FROM quizzes WHERE id = ?;");
             stmt.setInt(1, quizId);
             stmt.executeUpdate();
             stmt.close();
@@ -177,7 +189,7 @@ public class DatabaseWorker {
         try {
             checkConnection();
 
-            PreparedStatement stmt = c.prepareStatement("SELECT id, name, hidden FROM quizzes");
+            PreparedStatement stmt = c.prepareStatement("SELECT id, name, hidden FROM quizzes ORDER BY id;");
             ResultSet rs = stmt.executeQuery();
 
             ArrayList<Triplet<Integer, String, Boolean>> quizzes = new ArrayList<>();

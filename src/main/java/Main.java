@@ -34,9 +34,12 @@ public class Main {
 
 		try {
 			botsApi.registerBot(new TelegramBot(System.getenv("BOT_USERNAME"), System.getenv("BOT_TOKEN"),
-					botOptions, new DatabaseWorker(System.getenv("JDBC_DATABASE_URL"))));
+					botOptions, new DatabaseWorker(System.getenv("JDBC_DATABASE_URL")), System.getenv("ADMINS")));
 		} catch (TelegramApiRequestException e) {
 			e.printStackTrace();
+		}
+		catch (NullPointerException e) {
+			System.out.println("Укажите системные переменные.");
 		}
 	}
 }
