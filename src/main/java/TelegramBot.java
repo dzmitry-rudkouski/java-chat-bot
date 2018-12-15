@@ -20,6 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class TelegramBot extends TelegramLongPollingBot {
@@ -53,8 +54,16 @@ public class TelegramBot extends TelegramLongPollingBot {
                 String content = getFileContent(update.getMessage().getEntities().get(0).getText());
                 reply = chatBot.addQuiz(content, update.getMessage().getFrom().getId());
             }
-            else if (update.getMessage().hasDocument() && update.getMessage().getDocument().getMimeType().equals("application/x-yaml")) {
-                reply = chatBot.addQuiz(getFileContent(update.getMessage().getDocument()), update.getMessage().getFrom().getId());
+            else if (update.getMessage().hasDocument()) {
+                if (update.getMessage().getDocument().getMimeType().equals("application/x-yaml"))
+                    try {
+                        reply = chatBot.addQuiz(getFileContent(update.getMessage().getDocument()), update.getMessage().getFrom().getId());
+                    }
+                    catch (NoSuchElementException e) {
+                        reply = new ChatBotReply("Необходимо отправить файл в формате YAML.");
+                    }
+                else
+                    reply = new ChatBotReply("Необходимо отправить файл в формате YAML. MIME-тип должен быть application/x-yaml.");
             }
             else {
                 reply = chatBot.answer(update.getMessage().getText(), update.getMessage().getFrom().getId());

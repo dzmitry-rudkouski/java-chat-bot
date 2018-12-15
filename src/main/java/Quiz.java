@@ -38,50 +38,50 @@ public class Quiz {
     }
 
     private void BuildQuiz(String data) throws QuizException {
+        YamlReader reader = new YamlReader(data);
+        QuizFile quizFile;
+
         try {
-            YamlReader reader = new YamlReader(data);
-            QuizFile quizFile = reader.read(QuizFile.class);
+            quizFile = reader.read(QuizFile.class);
+        }
+        catch (YamlException e) {
+            throw new QuizException(String.format("Некорректный формат файла. %s", e.getMessage()));
+        }
 
-            name = quizFile.name;
-            initialMessage = quizFile.initialMessage;
-            shareText = quizFile.shareText;
-            results = quizFile.results;
-            questions.put(0, "");
-            answers.add(0, "");
-            quizGraph = new ArrayList<>();
-            answersIndexes = new HashMap<>();
-            answersIndexes.put("", 0);
+        name = quizFile.name;
+        initialMessage = quizFile.initialMessage;
+        shareText = quizFile.shareText;
+        results = quizFile.results;
 
-            for (var item : quizFile.questions)
-                questions.put(Integer.parseInt(item.get("id")) + 1, item.get("text"));
+        questions.put(0, "");
+        answers.add(0, "");
+        quizGraph = new ArrayList<>();
+        answersIndexes = new HashMap<>();
+        answersIndexes.put("", 0);
 
-            for (var i = 0; i < questions.size(); i++)
-            {
-                quizGraph.add(new ArrayList<>());
-            }
+        for (var item : quizFile.questions)
+            questions.put(Integer.parseInt(item.get("id")) + 1, item.get("text"));
 
-            var i = 0;
-            for (var e : quizFile.answers) {
-                answers.add(e.get("text"));
-                answersIndexes.put(e.get("text"), i + 1);
-                int node = Integer.parseInt(e.get("from")) + 1;
-                DestinationNode nextNode = new DestinationNode(Integer.parseInt(e.get("to")) + 1,
-                        i + 1);
-                quizGraph.get(node).add(nextNode);
-                i++;
-            }
-            quizGraph.get(0).add(new DestinationNode(1, 0));
-
-            db.connect();
-            db.initDatabase();
-        } catch (YamlException e)
+        for (var i = 0; i < questions.size(); i++)
         {
-            throw new QuizException("Некорректный формат файла.");
+            quizGraph.add(new ArrayList<>());
         }
-        catch (IndexOutOfBoundsException e) {
-            throw new QuizException(String.format("Обращение к несуществующему индексу графа: %d.",
-                    Integer.parseInt(e.getMessage().split(" ")[1]) - 1));
+
+        var i = 0;
+        for (var e : quizFile.answers) {
+            answers.add(e.get("text"));
+            answersIndexes.put(e.get("text"), i + 1);
+            DestinationNode nextNode = new DestinationNode(Integer.parseInt(e.get("to")) + 1,i + 1);
+            int node = Integer.parseInt(e.get("from")) + 1;
+            if (quizGraph.size() < node)
+                throw new QuizException(String.format("Обращение к несуществующему индексу графа: %d.", node - 1));
+            quizGraph.get(node).add(nextNode);
+            i++;
         }
+        quizGraph.get(0).add(new DestinationNode(1, 0));
+
+        db.connect();
+        db.initDatabase();
     }
 
     int getNextQuestionIndex(int edgeIndex, int currentQuestionId) {
@@ -104,14 +104,14 @@ public class Quiz {
     String getCycle(ArrayList<Integer> parent, int startNode)
     {
         var saveStart = startNode;
-        ArrayList<String> cycle = new ArrayList<>(Arrays.asList(String.valueOf(startNode)));
+        ArrayList<String> cycle = new ArrayList<>(Arrays.asList(String.valueOf(startNode - 1)));
         startNode = parent.get(startNode);
         while(startNode != saveStart)
         {
-            cycle.add(String.valueOf(startNode));
+            cycle.add(String.valueOf(startNode - 1));
             startNode = parent.get(startNode);
         }
-        cycle.add(String.valueOf(startNode));
+        cycle.add(String.valueOf(startNode - 1));
         Collections.reverse(cycle);
         return String.join("->", cycle);
     }
@@ -132,7 +132,7 @@ public class Quiz {
         if (quizGraph.get(current).size() == 0 && !results.containsKey(questions.get(current)))
         {
             throw new QuizException(String.format("Опрос завершается в нефинальной вершине. " +
-                    "Вершина %d не находится в списке ответов.", current));
+                    "Вершина %d не находится в списке ответов.", current - 1));
         }
         color.set(current, 2);
     }
@@ -144,6 +144,6 @@ public class Quiz {
         dfs(1, color, parent);
         for (var i = 1; i < questions.size(); i++)
             if (color.get(i) != 2)
-                throw new QuizException(String.format("Несвязный граф. Ошибка на вершине %d.", i));
+                throw new QuizException(String.format("Несвязный граф. Ошибка на вершине %d.", i - 1));
     }
 }

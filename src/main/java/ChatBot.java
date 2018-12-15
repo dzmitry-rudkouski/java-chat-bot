@@ -102,6 +102,8 @@ class ChatBot {
                 return new ChatBotReply(addAdmin, cancelKeyboard);
             default:
                 if (runner.isActive(userId)) {
+                    if (message.startsWith("/start"))
+                        return startQuizFromInvite(message, userId);
                     ChatBotReply reply = runner.proceedRequest(message, userId);
                     if (reply.imageUrl == null)
                         return reply;
@@ -115,12 +117,7 @@ class ChatBot {
                         int quizId = Integer.parseInt(message.split(":")[0]);
                         return startQuiz(userId, quizId, false);
                     } else if (message.startsWith("/start")) {
-                        try {
-                            int quizId = Integer.parseInt(message.split(" ")[1]);
-                            return startQuiz(userId, quizId, true);
-                        } catch (Exception e) {
-                            return new ChatBotReply(start, getQuizzesList(db.isAdmin(userId)));
-                        }
+                        return startQuizFromInvite(message, userId);
                     }
                     else if (message.startsWith("DELETE")) {
                         if (!db.isAdmin(userId))
@@ -128,8 +125,7 @@ class ChatBot {
                         db.deleteQuiz(Integer.parseInt(message.split(" ")[1]));
                         return new ChatBotReply(quizDeleted + returnToHome, getKeyboard(userId));
                     }
-                    else
-                        return new ChatBotReply(unrecognized);
+                    return new ChatBotReply(unrecognized);
                 }
         }
     }
@@ -144,6 +140,16 @@ class ChatBot {
         else
             return new ChatBotReply(runner.getInitialMessage(quizId) +
                     '\n' + firstQuestion.message, firstQuestion.keyboardOptions);
+    }
+
+    ChatBotReply startQuizFromInvite(String message, long userId) {
+        try {
+            int quizId = Integer.parseInt(message.split(" ")[1]);
+            runner.stop(userId);
+            return startQuiz(userId, quizId, true);
+        } catch (Exception e) {
+            return new ChatBotReply(start, getQuizzesList(db.isAdmin(userId)));
+        }
     }
 
     ChatBotReply addQuiz(String content, long userId) {
