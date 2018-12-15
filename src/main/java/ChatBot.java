@@ -32,7 +32,8 @@ class ChatBot {
     protected final String adminAdded = "Администратор добавлен.";
     protected final String quizDeleted = "Опрос успешно удалён";
     protected final String noQuizzes = "Нет доступных опросов";
-
+    protected final String quizAccepted = "Опрос добавлен всем пользователям";
+    protected final String quizNotAvailable = "Опрос недоступен";
 
     protected final Pattern quizSelection = Pattern.compile("[0-9]+:[ A-Za-zА-Яа-я?,.-]+");
 
@@ -125,6 +126,13 @@ class ChatBot {
                         db.deleteQuiz(Integer.parseInt(message.split(" ")[1]));
                         return new ChatBotReply(quizDeleted + returnToHome, getKeyboard(userId));
                     }
+                    else if (message.startsWith("ACCEPT"))
+                    {
+                        if (!db.isAdmin(userId))
+                            return new ChatBotReply(unrecognized);
+                        db.markUnhidden(Integer.parseInt(message.split(" ")[1]));
+                        return new ChatBotReply(quizAccepted + returnToHome, getKeyboard(userId));
+                    }
                     return new ChatBotReply(unrecognized);
                 }
         }
@@ -145,6 +153,8 @@ class ChatBot {
     ChatBotReply startQuizFromInvite(String message, long userId) {
         try {
             int quizId = Integer.parseInt(message.split(" ")[1]);
+            if (db.isHidden(quizId))
+                return new ChatBotReply(quizNotAvailable);
             runner.stop(userId);
             return startQuiz(userId, quizId, true);
         } catch (Exception e) {
@@ -158,7 +168,7 @@ class ChatBot {
                 return new ChatBotReply(quizParseError);
             Quiz quiz = new Quiz(content, db);
             quiz.checkValidity();
-            db.addQuiz(Serializer.serialize(quiz));
+            db.addQuiz(Serializer.serialize(quiz), !db.isAdmin(userId));
         } catch (QuizException e) {
             return new ChatBotReply(String.format(quizParseError, e.message));
         }
@@ -169,11 +179,17 @@ class ChatBot {
         var quizzes = db.getQuizzesList();
         List<List<String>> options = new ArrayList<>();
         for (var e : quizzes) {
+            if (!isAdmin && e.getValue2())
+                continue;
             options.add(new ArrayList<>());
-            options.get(options.size() - 1).add(String.format("%s: %s", e.getFirst(), e.getSecond()));
+            options.get(options.size() - 1).add(String.format("%s: %s", e.getValue0(), e.getValue1()));
             if (isAdmin)
             {
-                options.get(options.size() - 1).add(String.format("DELETE %s", e.getFirst()));
+                options.get(options.size() - 1).add(String.format("DELETE %s", e.getValue0()));
+                if (e.getValue2())
+                {
+                    options.get(options.size() - 1).add(String.format("ACCEPT %s", e.getValue0()));
+                }
             }
         }
         return options;

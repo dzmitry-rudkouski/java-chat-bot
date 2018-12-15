@@ -1,6 +1,8 @@
 package database;
 
+import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.glassfish.grizzly.utils.Pair;
+import org.javatuples.Triplet;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -55,7 +57,8 @@ public class DatabaseWorker {
                     "answers TEXT NOT NULL, " +
                     "quiz_graph TEXT NOT NULL, " +
                     "answers_indexes TEXT NOT NULL, " +
-                    "results TEXT NOT NULL)";
+                    "results TEXT NOT NULL, " +
+                    "hidden BOOLEAN NOT NULL)";
             stmt.executeUpdate(quizzes);
 
             String admins = "CREATE TABLE IF NOT EXISTS admins(" +
@@ -100,13 +103,13 @@ public class DatabaseWorker {
         return false;
     }
 
-    public void addQuiz(QuizDataSet quiz) {
+    public void addQuiz(QuizDataSet quiz, Boolean isHidden) {
         try {
             checkConnection();
 
             PreparedStatement stmt = c.prepareStatement("INSERT INTO quizzes(name, initial_message, share_text, " +
                     "questions, answers, quiz_graph, answers_indexes, " +
-                    "results) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+                    "results, hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);");
             stmt.setString(1, quiz.name);
             stmt.setString(2, quiz.initialMessage);
             stmt.setString(3, quiz.shareText);
@@ -115,6 +118,7 @@ public class DatabaseWorker {
             stmt.setString(6, quiz.quizGraph);
             stmt.setString(7, quiz.answersIndexes);
             stmt.setString(8, quiz.results);
+            stmt.setBoolean(9, isHidden);
             stmt.executeUpdate();
             stmt.close();
         }
@@ -123,6 +127,38 @@ public class DatabaseWorker {
             System.exit(1);
         }
     }
+
+    public void markUnhidden(int quizId)
+    {
+        try
+        {
+            PreparedStatement stmt = c.prepareStatement("UPDATE quizzes SET hidden = FALSE WHERE id = ?");
+            stmt.setInt(1, quizId);
+            stmt.executeUpdate();
+            stmt.close();
+        }
+        catch(SQLException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public Boolean isHidden(int quizId)
+    {
+        try
+        {
+            PreparedStatement stmt = c.prepareStatement("SELECT COUNT(*) FROM quizzes WHERE id = ? AND hidden = TRUE;");
+            stmt.setInt(1, quizId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next())
+                return rs.getInt("count") > 0;
+        }
+        catch(SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
     public void deleteQuiz(int quizId)
     {
@@ -137,16 +173,17 @@ public class DatabaseWorker {
     }
 
 
-    public ArrayList<Pair<Integer, String>> getQuizzesList() {
+    public ArrayList<Triplet<Integer, String, Boolean>> getQuizzesList() {
         try {
             checkConnection();
 
-            PreparedStatement stmt = c.prepareStatement("SELECT id, name FROM quizzes");
+            PreparedStatement stmt = c.prepareStatement("SELECT id, name, hidden FROM quizzes");
             ResultSet rs = stmt.executeQuery();
 
-            ArrayList<Pair<Integer, String>> quizzes = new ArrayList<>();
+            ArrayList<Triplet<Integer, String, Boolean>> quizzes = new ArrayList<>();
             while (rs.next()) {
-                quizzes.add(new Pair<>(rs.getInt("id"), rs.getString("name")));
+                quizzes.add(new Triplet<>(rs.getInt("id"), rs.getString("name"),
+                        rs.getBoolean("hidden")));
             }
 
             return quizzes;
