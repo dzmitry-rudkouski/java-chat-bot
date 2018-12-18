@@ -27,6 +27,7 @@ class ChatBot {
     protected final String btnAddModerator = "✨ Добавить модератора";
     protected final String btnRemoveModerator = "\uD83D\uDD2A Удалить модератора";
     protected final String btnCancel = "❌ Отмена";
+    protected final String btnGetModerators = "\uD83D\uDC68\u200D\uD83D\uDC68\u200D\uD83D\uDC66\u200D\uD83D\uDC66Модераторы";
     protected final String stateAddModerator = "add-moderator";
     protected final String stateRemoveModerator = "remove-moderator";
     protected final String addModerator = "Пришлите id нового модератора.";
@@ -38,6 +39,7 @@ class ChatBot {
     protected final String noQuizzes = "Нет доступных опросов";
     protected final String quizAccepted = "Опрос добавлен всем пользователям";
     protected final String quizNotAvailable = "Опрос недоступен";
+    protected final String noModerators = "Нет модераторов";
 
     protected final String delete = "DELETE";
     protected final String accept = "ACCEPT";
@@ -56,7 +58,7 @@ class ChatBot {
         this.db.connect();
         this.admins = admins;
         cancelKeyboard.add(Collections.singletonList(btnCancel));
-        adminKeyboard.add(Arrays.asList(btnListQuiz, btnAddQuiz, btnAddModerator, btnRemoveModerator));
+        adminKeyboard.add(Arrays.asList(btnListQuiz, btnAddQuiz, btnAddModerator, btnRemoveModerator, btnGetModerators));
         userKeyboard.add(Arrays.asList(btnListQuiz, btnAddQuiz));
     }
 
@@ -122,6 +124,11 @@ class ChatBot {
             case btnRemoveModerator:
                 state.put(userId, stateRemoveModerator);
                 return new ChatBotReply(removeModerator, cancelKeyboard);
+            case btnGetModerators:
+                var moderatorsList = db.getModerators();
+                if (moderatorsList.size() == 0)
+                    return new ChatBotReply(noModerators + returnToHome, getKeyboard(userId));
+                return new ChatBotReply(convertToString(moderatorsList), getKeyboard(userId));
             default:
                 if (runner.isActive(userId)) {
                     if (message.startsWith("/start"))
@@ -158,6 +165,18 @@ class ChatBot {
                 }
         }
     }
+
+    String convertToString(ArrayList<Long> moderatorsList)
+    {
+        StringBuilder moderators = new StringBuilder();
+        for (var moderator : moderatorsList)
+        {
+            moderators.append(moderator);
+            moderators.append("\n");
+        }
+        return moderators.toString();
+    }
+
 
     ChatBotReply startQuiz(long userId, int quizId, boolean fromInvite) {
         if (!runner.start(userId, quizId))

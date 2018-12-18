@@ -88,6 +88,29 @@ public class DatabaseWorker {
         }
     }
 
+    public ArrayList<Long> getModerators()
+    {
+        try {
+            checkConnection();
+
+            PreparedStatement stmt = c.prepareStatement("SELECT id FROM moderators;");
+            ResultSet rs = stmt.executeQuery();
+
+            ArrayList<Long> moderators = new ArrayList<>();
+            while (rs.next()) {
+                moderators.add(rs.getLong("id"));
+            }
+
+            return moderators;
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
+
     public boolean isModerator(long userId) {
         try {
             checkConnection();
