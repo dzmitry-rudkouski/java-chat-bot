@@ -106,7 +106,7 @@ class ChatBot {
                     return new ChatBotReply(addQuiz);
             case "/list":
             case btnListQuiz:
-                var allQuizzes = getQuizzesList(isPrivileged(userId));
+                var allQuizzes = getQuizzesList(isPrivileged(userId), userId);
                 if (allQuizzes.size() == 0)
                     return new ChatBotReply(noQuizzes + returnToHome, getKeyboard(userId));
                 return new ChatBotReply(quizzesList, allQuizzes);
@@ -149,7 +149,7 @@ class ChatBot {
                     }
                     else if (message.startsWith(accept))
                     {
-                        if (!isPrivileged(userId))
+                        if (!isPrivileged(userId) || (userId == db.getAuthorId(Integer.parseInt(message.split(" ")[1]))))
                             return new ChatBotReply(unrecognized);
                         db.markUnhidden(Integer.parseInt(message.split(" ")[1]));
                         return new ChatBotReply(quizAccepted + returnToHome, getKeyboard(userId));
@@ -161,7 +161,7 @@ class ChatBot {
 
     ChatBotReply startQuiz(long userId, int quizId, boolean fromInvite) {
         if (!runner.start(userId, quizId))
-            return new ChatBotReply(quizNotFound, getQuizzesList(isPrivileged(userId)));
+            return new ChatBotReply(quizNotFound, getQuizzesList(isPrivileged(userId), userId));
         ChatBotReply firstQuestion = runner.proceedRequest("", userId);
         if (fromInvite)
             return new ChatBotReply(invited + runner.getInitialMessage(quizId) +
@@ -179,7 +179,7 @@ class ChatBot {
             runner.stop(userId);
             return startQuiz(userId, quizId, true);
         } catch (Exception e) {
-            return new ChatBotReply(start, getQuizzesList(isPrivileged(userId)));
+            return new ChatBotReply(start, getQuizzesList(isPrivileged(userId), userId));
         }
     }
 
@@ -189,14 +189,14 @@ class ChatBot {
                 return new ChatBotReply(quizParseError);
             Quiz quiz = new Quiz(content, db);
             quiz.checkValidity();
-            db.addQuiz(Serializer.serialize(quiz), !isPrivileged(userId));
+            db.addQuiz(Serializer.serialize(quiz), !admins.contains(userId), userId);
         } catch (QuizException e) {
             return new ChatBotReply(String.format(quizParseError, e.message));
         }
         return new ChatBotReply(quizAdded + returnToHome, getKeyboard(userId));
     }
 
-    List<List<String>> getQuizzesList(boolean isModerator) {
+    List<List<String>> getQuizzesList(boolean isModerator, long userId) {
         var quizzes = db.getQuizzesList();
         List<List<String>> options = new ArrayList<>();
         for (var e : quizzes) {
@@ -208,7 +208,7 @@ class ChatBot {
             if (isModerator)
             {
                 options.get(index).add(String.format("%s %s", delete, e.getValue0()));
-                if (e.getValue2())
+                if (e.getValue2() && (admins.contains(userId) || !(userId == db.getAuthorId(e.getValue0()))))
                 {
                     options.get(index).add(String.format("%s %s", accept, e.getValue0()));
                 }
