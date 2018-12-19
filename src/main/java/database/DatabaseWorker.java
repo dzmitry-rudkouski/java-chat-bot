@@ -88,7 +88,7 @@ public class DatabaseWorker {
         }
     }
 
-    public ArrayList<Long> getModerators()
+    public ArrayList<String> getModerators()
     {
         try {
             checkConnection();
@@ -96,9 +96,9 @@ public class DatabaseWorker {
             PreparedStatement stmt = c.prepareStatement("SELECT id FROM moderators;");
             ResultSet rs = stmt.executeQuery();
 
-            ArrayList<Long> moderators = new ArrayList<>();
+            ArrayList<String> moderators = new ArrayList<>();
             while (rs.next()) {
-                moderators.add(rs.getLong("id"));
+                moderators.add(rs.getString("id"));
             }
 
             return moderators;

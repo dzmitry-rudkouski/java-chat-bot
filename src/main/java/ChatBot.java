@@ -128,7 +128,7 @@ class ChatBot {
                 var moderatorsList = db.getModerators();
                 if (moderatorsList.size() == 0)
                     return new ChatBotReply(noModerators + returnToHome, getKeyboard(userId));
-                return new ChatBotReply(convertToString(moderatorsList), getKeyboard(userId));
+                return new ChatBotReply(String.join("\n", moderatorsList), getKeyboard(userId));
             default:
                 if (runner.isActive(userId)) {
                     if (message.startsWith("/start"))
@@ -165,18 +165,6 @@ class ChatBot {
                 }
         }
     }
-
-    String convertToString(ArrayList<Long> moderatorsList)
-    {
-        StringBuilder moderators = new StringBuilder();
-        for (var moderator : moderatorsList)
-        {
-            moderators.append(moderator);
-            moderators.append("\n");
-        }
-        return moderators.toString();
-    }
-
 
     ChatBotReply startQuiz(long userId, int quizId, boolean fromInvite) {
         if (!runner.start(userId, quizId))
