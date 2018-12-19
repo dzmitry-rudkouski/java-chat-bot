@@ -57,7 +57,8 @@ public class DatabaseWorker {
                     "quiz_graph TEXT NOT NULL, " +
                     "answers_indexes TEXT NOT NULL, " +
                     "results TEXT NOT NULL, " +
-                    "hidden BOOLEAN NOT NULL)";
+                    "hidden BOOLEAN NOT NULL, " +
+                    "author_id BIGINT NOT NULL)";
             stmt.executeUpdate(quizzes);
 
             String moderators = "CREATE TABLE IF NOT EXISTS moderators(" +
@@ -87,6 +88,29 @@ public class DatabaseWorker {
         }
     }
 
+    public ArrayList<String> getModerators()
+    {
+        try {
+            checkConnection();
+
+            PreparedStatement stmt = c.prepareStatement("SELECT id FROM moderators;");
+            ResultSet rs = stmt.executeQuery();
+
+            ArrayList<String> moderators = new ArrayList<>();
+            while (rs.next()) {
+                moderators.add(rs.getString("id"));
+            }
+
+            return moderators;
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
+
     public boolean isModerator(long userId) {
         try {
             checkConnection();
@@ -115,13 +139,13 @@ public class DatabaseWorker {
         }
     }
 
-    public void addQuiz(QuizDataSet quiz, Boolean isHidden) {
+    public void addQuiz(QuizDataSet quiz, Boolean isHidden, Long author_id) {
         try {
             checkConnection();
 
             PreparedStatement stmt = c.prepareStatement("INSERT INTO quizzes(name, initial_message, share_text, " +
                     "questions, answers, quiz_graph, answers_indexes, " +
-                    "results, hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    "results, hidden, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
             stmt.setString(1, quiz.name);
             stmt.setString(2, quiz.initialMessage);
             stmt.setString(3, quiz.shareText);
@@ -131,6 +155,7 @@ public class DatabaseWorker {
             stmt.setString(7, quiz.answersIndexes);
             stmt.setString(8, quiz.results);
             stmt.setBoolean(9, isHidden);
+            stmt.setLong(10, author_id);
             stmt.executeUpdate();
             stmt.close();
         }
@@ -182,6 +207,28 @@ public class DatabaseWorker {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public Long getAuthorId(int quizId)
+    {
+        try {
+            checkConnection();
+
+            PreparedStatement stmt = c.prepareStatement("SELECT author_id FROM quizzes WHERE id = ?;");
+            stmt.setInt(1, quizId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getLong("author_id");
+            }
+
+            return null;
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
     }
 
 

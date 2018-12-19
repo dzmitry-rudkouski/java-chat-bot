@@ -80,6 +80,8 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="Maven: org.javatuples:javatuples:1.2" level="project" />
+    <orderEntry type="library" name="Maven: org.javatuples:javatuples:1.2" level="project" />
+    <orderEntry type="library" name="Maven: org.javatuples:javatuples:1.2" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.jr:jackson-jr-objects:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: org.telegram:telegrambots:4.1" level="project" />
