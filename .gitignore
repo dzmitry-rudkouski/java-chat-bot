@@ -60,4 +60,5 @@ src/.project
 src/.classpath
 
 target/
+/ChatBot.iml
 /.idea/
