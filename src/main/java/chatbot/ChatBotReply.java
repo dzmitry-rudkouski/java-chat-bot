@@ -3,10 +3,10 @@ package chatbot;
 import java.util.List;
 
 class ChatBotReply {
-    String message;
+    String             message;
     List<List<String>> keyboardOptions;
-    String imageUrl;
-    String shareText;
+    String             imageUrl;
+    String             shareText;
 
     ChatBotReply(String message) {
         this.message = message;

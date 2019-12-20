@@ -3,12 +3,17 @@ package chatbot.database;
 import org.glassfish.grizzly.utils.Pair;
 import org.javatuples.Triplet;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class DatabaseWorker {
     private Connection c;
-    private String dbUrl;
+    private String     dbUrl;
 
     public DatabaseWorker(String dbUrl) {
         this.dbUrl = dbUrl;
@@ -28,8 +33,7 @@ public class DatabaseWorker {
         try {
             c.close();
             connect();
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -41,33 +45,32 @@ public class DatabaseWorker {
 
             Statement stmt = c.createStatement();
             String quiz = "CREATE TABLE IF NOT EXISTS quiz(" +
-                    "id BIGINT PRIMARY KEY NOT NULL, " +
-                    "current_quiz_id INT NOT NULL, " +
-                    "current_question_id INT NOT NULL, " +
-                    "game_active BOOLEAN)";
+                "id BIGINT PRIMARY KEY NOT NULL, " +
+                "current_quiz_id INT NOT NULL, " +
+                "current_question_id INT NOT NULL, " +
+                "game_active BOOLEAN)";
             stmt.executeUpdate(quiz);
 
             String quizzes = "CREATE TABLE IF NOT EXISTS quizzes(" +
-                    "id SERIAL PRIMARY KEY NOT NULL, " +
-                    "name TEXT NOT NULL, " +
-                    "initial_message TEXT NOT NULL, " +
-                    "share_text TEXT NOT NULL, " +
-                    "questions TEXT NOT NULL, " +
-                    "answers TEXT NOT NULL, " +
-                    "quiz_graph TEXT NOT NULL, " +
-                    "answers_indexes TEXT NOT NULL, " +
-                    "results TEXT NOT NULL, " +
-                    "hidden BOOLEAN NOT NULL, " +
-                    "author_id BIGINT NOT NULL)";
+                "id SERIAL PRIMARY KEY NOT NULL, " +
+                "name TEXT NOT NULL, " +
+                "initial_message TEXT NOT NULL, " +
+                "share_text TEXT NOT NULL, " +
+                "questions TEXT NOT NULL, " +
+                "answers TEXT NOT NULL, " +
+                "quiz_graph TEXT NOT NULL, " +
+                "answers_indexes TEXT NOT NULL, " +
+                "results TEXT NOT NULL, " +
+                "hidden BOOLEAN NOT NULL, " +
+                "author_id BIGINT NOT NULL)";
             stmt.executeUpdate(quizzes);
 
             String moderators = "CREATE TABLE IF NOT EXISTS moderators(" +
-                    "id BIGINT PRIMARY KEY NOT NULL)";
+                "id BIGINT PRIMARY KEY NOT NULL)";
             stmt.executeUpdate(moderators);
             stmt.close();
 
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -102,8 +105,7 @@ public class DatabaseWorker {
             }
 
             return moderators;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -144,8 +146,8 @@ public class DatabaseWorker {
             checkConnection();
 
             PreparedStatement stmt = c.prepareStatement("INSERT INTO quizzes(name, initial_message, share_text, " +
-                    "questions, answers, quiz_graph, answers_indexes, " +
-                    "results, hidden, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                "questions, answers, quiz_graph, answers_indexes, " +
+                "results, hidden, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
             stmt.setString(1, quiz.name);
             stmt.setString(2, quiz.initialMessage);
             stmt.setString(3, quiz.shareText);
@@ -158,8 +160,7 @@ public class DatabaseWorker {
             stmt.setLong(10, author_id);
             stmt.executeUpdate();
             stmt.close();
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -167,30 +168,25 @@ public class DatabaseWorker {
 
     public void markUnhidden(int quizId)
     {
-        try
-        {
+        try {
             PreparedStatement stmt = c.prepareStatement("UPDATE quizzes SET hidden = FALSE WHERE id = ?;");
             stmt.setInt(1, quizId);
             stmt.executeUpdate();
             stmt.close();
-        }
-        catch(SQLException e)
-        {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public Boolean isHidden(int quizId)
     {
-        try
-        {
+        try {
             PreparedStatement stmt = c.prepareStatement("SELECT COUNT(*) FROM quizzes WHERE id = ? AND hidden = TRUE;");
             stmt.setInt(1, quizId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next())
                 return rs.getInt("count") > 0;
-        }
-        catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
@@ -223,8 +219,7 @@ public class DatabaseWorker {
             }
 
             return null;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -242,12 +237,11 @@ public class DatabaseWorker {
             ArrayList<Triplet<Integer, String, Boolean>> quizzes = new ArrayList<>();
             while (rs.next()) {
                 quizzes.add(new Triplet<>(rs.getInt("id"), rs.getString("name"),
-                        rs.getBoolean("hidden")));
+                    rs.getBoolean("hidden")));
             }
 
             return quizzes;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -264,13 +258,12 @@ public class DatabaseWorker {
 
             if (rs.next()) {
                 return new QuizDataSet(rs.getInt("id"), rs.getString("name"), rs.getString("initial_message"),
-                        rs.getString("share_text"), rs.getString("questions"), rs.getString("answers"),
-                        rs.getString("quiz_graph"), rs.getString("answers_indexes"), rs.getString("results"));
+                    rs.getString("share_text"), rs.getString("questions"), rs.getString("answers"),
+                    rs.getString("quiz_graph"), rs.getString("answers_indexes"), rs.getString("results"));
             }
             stmt.close();
             return null;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -285,7 +278,7 @@ public class DatabaseWorker {
             stmt.setLong(1, userId);
             ResultSet rs = stmt.executeQuery();
 
-            if(rs.next()) {
+            if (rs.next()) {
                 rs.getInt("id");
                 int currentQuizId = rs.getInt("current_quiz_id");
                 int currentQuestionId = rs.getInt("current_question_id");
@@ -293,8 +286,7 @@ public class DatabaseWorker {
                 stmt.close();
                 return new Pair<>(currentQuizId, currentQuestionId);
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -331,14 +323,13 @@ public class DatabaseWorker {
 
             stmt.executeUpdate();
             stmt.close();
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
     }
 
-    private void runSql (long userId, String query) {
+    private void runSql(long userId, String query) {
         try {
             checkConnection();
 
@@ -346,8 +337,7 @@ public class DatabaseWorker {
             stmt.setLong(1, userId);
             stmt.executeUpdate();
             stmt.close();
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -401,11 +391,9 @@ public class DatabaseWorker {
                 rs.close();
                 stmt.close();
                 return gameActive;
-            }
-            else
+            } else
                 return false;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }

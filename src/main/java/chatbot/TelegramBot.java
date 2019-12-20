@@ -16,7 +16,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -30,16 +33,14 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private static String botUsername;
     private static String botToken;
-
-    private final ReplyKeyboardRemove noKeyboard = new ReplyKeyboardRemove();
-
     protected final String vkShareUrl = "https://vk.com/share.php?url=%s&title=%s&image=%s";
+    private final ReplyKeyboardRemove noKeyboard = new ReplyKeyboardRemove();
 
     TelegramBot(String username, String token, DefaultBotOptions botOptions, DatabaseWorker db, String adminsString) {
         super(botOptions);
 
         List<Long> admins = new ArrayList<>();
-        for (String i: adminsString.split(", ")) {
+        for (String i : adminsString.split(", ")) {
             admins.add(Long.parseLong(i));
         }
 
@@ -50,10 +51,14 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     @Override
-    public String getBotUsername() { return botUsername; }
+    public String getBotUsername() {
+        return botUsername;
+    }
 
     @Override
-    public String getBotToken() { return botToken; }
+    public String getBotToken() {
+        return botToken;
+    }
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -62,25 +67,22 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (update.getMessage().hasEntities() && update.getMessage().getEntities().get(0).getType().equals("url")) {
                 String content = getFileContent(update.getMessage().getEntities().get(0).getText());
                 reply = chatBot.addQuiz(content, update.getMessage().getFrom().getId());
-            }
-            else if (update.getMessage().hasDocument()) {
+            } else if (update.getMessage().hasDocument()) {
                 if (update.getMessage().getDocument().getMimeType().equals("application/x-yaml"))
                     try {
                         reply = chatBot.addQuiz(getFileContent(update.getMessage().getDocument()), update.getMessage().getFrom().getId());
-                    }
-                    catch (NoSuchElementException e) {
+                    } catch (NoSuchElementException e) {
                         reply = new ChatBotReply("Необходимо отправить файл в формате YAML.");
                     }
                 else
                     reply = new ChatBotReply("Необходимо отправить файл в формате YAML. MIME-тип должен быть application/x-yaml.");
-            }
-            else {
+            } else {
                 reply = chatBot.answer(update.getMessage().getText(), update.getMessage().getFrom().getId());
             }
 
             var sendMessage = new SendMessage(
-                    update.getMessage().getChatId(),
-                    reply.message
+                update.getMessage().getChatId(),
+                reply.message
             );
             sendMessage.enableHtml(true);
             if (reply.keyboardOptions != null)
@@ -88,8 +90,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             else
                 sendMessage.setReplyMarkup(noKeyboard);
 
-            if (reply.imageUrl != null && reply.shareText != null)
-            {
+            if (reply.imageUrl != null && reply.shareText != null) {
                 var sendPhoto = new SendPhoto();
                 sendPhoto.setChatId(update.getMessage().getChatId());
                 sendPhoto.setPhoto(reply.imageUrl);
@@ -98,11 +99,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                 List<List<InlineKeyboardButton>> inlineRows = new ArrayList<>();
                 List<InlineKeyboardButton> row = new ArrayList<>();
                 row.add(new InlineKeyboardButton()
-                        .setText("Рассказать в VK")
-                        .setUrl(String.format(vkShareUrl,
-                                URLEncoder.encode(String.format("https://t.me/%s", botUsername), StandardCharsets.UTF_8),
-                                URLEncoder.encode(reply.shareText, StandardCharsets.UTF_8),
-                                URLEncoder.encode(reply.imageUrl, StandardCharsets.UTF_8))));
+                    .setText("Рассказать в VK")
+                    .setUrl(String.format(vkShareUrl,
+                        URLEncoder.encode(String.format("https://t.me/%s", botUsername), StandardCharsets.UTF_8),
+                        URLEncoder.encode(reply.shareText, StandardCharsets.UTF_8),
+                        URLEncoder.encode(reply.imageUrl, StandardCharsets.UTF_8))));
                 inlineRows.add(row);
                 inlineMarkup.setKeyboard(inlineRows);
                 sendPhoto.setReplyMarkup(inlineMarkup);
