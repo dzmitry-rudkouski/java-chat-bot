@@ -1,6 +1,7 @@
 package chatbot;
 
-import chatbot.database.FakeDatabaseWorker;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.ApiContext;
@@ -8,8 +9,11 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.util.Objects;
 
 public class Application {
+
+    private static Log log = LogFactory.getLog(Application.class);
 
     public static void main(String[] args) {
 
@@ -36,19 +40,17 @@ public class Application {
 
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi();
-            String username = System.getProperty("BOT_USERNAME");
-            System.out.println(username);
-            String token = System.getProperty("BOT_TOKEN");
+            String username = Objects.requireNonNull(System.getProperty("BOT_USERNAME"), "BOT_USERNAME is not provided");
+            String token = Objects.requireNonNull(System.getProperty("BOT_TOKEN"), "BOT_TOKEN is not provided");
             botsApi.registerBot(
                 new TelegramBot(
                     username,
                     token,
-                    botOptions,
-                    new FakeDatabaseWorker()
+                    botOptions
                 )
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Unexpected error", e);
         }
     }
 }
