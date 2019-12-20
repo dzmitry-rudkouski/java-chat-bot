@@ -48,3 +48,7 @@ Required:
 * `JDBC_DATABASE_URL` - адрес базы данных
 
 _Чтобы активировать обход блокировки через прокси, нужно в аргументы запуска добавить флаг --dev._
+
+```shell
+java -cp "target\lib\*" -DBOT_USERNAME=XXX -DBOT_TOKEN=XXX -jar target/bot-0.0.1-SNAPSHOT.jar
+```

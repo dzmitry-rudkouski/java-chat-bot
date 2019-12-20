@@ -22,13 +22,13 @@ public class Application {
                 @Override
                 public PasswordAuthentication getPasswordAuthentication() {
                     return new PasswordAuthentication(
-                        System.getenv("PROXY_USER"),
-                        System.getenv("PROXY_PASS").toCharArray());
+                        System.getProperty("PROXY_USER"),
+                        System.getProperty("PROXY_PASS").toCharArray());
                 }
             });
 
-            botOptions.setProxyHost(System.getenv("PROXY_HOST"));
-            botOptions.setProxyPort(Integer.parseInt(System.getenv("PROXY_PORT")));
+            botOptions.setProxyHost(System.getProperty("PROXY_HOST"));
+            botOptions.setProxyPort(Integer.parseInt(System.getProperty("PROXY_PORT")));
             botOptions.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
         } else {
             botOptions.setProxyType(DefaultBotOptions.ProxyType.NO_PROXY);
@@ -36,13 +36,15 @@ public class Application {
 
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi();
+            String username = System.getProperty("BOT_USERNAME");
+            System.out.println(username);
+            String token = System.getProperty("BOT_TOKEN");
             botsApi.registerBot(
                 new TelegramBot(
-                    System.getenv("BOT_USERNAME"),
-                    System.getenv("BOT_TOKEN"),
+                    username,
+                    token,
                     botOptions,
-                    new FakeDatabaseWorker(),
-                    System.getenv("ADMINS")
+                    new FakeDatabaseWorker()
                 )
             );
         } catch (Exception e) {

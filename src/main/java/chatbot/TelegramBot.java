@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -33,15 +34,9 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final String              botToken;
     private final ReplyKeyboardRemove noKeyboard = new ReplyKeyboardRemove();
 
-    public TelegramBot(String username, String token, DefaultBotOptions botOptions, DatabaseWorker db, String adminsString) {
+    public TelegramBot(String username, String token, DefaultBotOptions botOptions, DatabaseWorker db) {
         super(botOptions);
-
-        List<Long> admins = new ArrayList<>();
-        for (String i : adminsString.split(", ")) {
-            admins.add(Long.parseLong(i));
-        }
-
-        chatBot = new ChatBot(username, db, admins);
+        chatBot = new ChatBot(username, db, Collections.emptyList());
         botUsername = username;
         botToken = token;
     }
