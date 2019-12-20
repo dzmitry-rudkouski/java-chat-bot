@@ -1,4 +1,6 @@
-import database.DatabaseWorker;
+package chatbot;
+
+import chatbot.database.DatabaseWorker;
 
 import java.util.*;
 import java.util.regex.Matcher;

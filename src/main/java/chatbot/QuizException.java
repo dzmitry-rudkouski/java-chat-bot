@@ -1,3 +1,5 @@
+package chatbot;
+
 public class QuizException extends Exception {
     String message;
 

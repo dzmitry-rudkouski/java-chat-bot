@@ -1,3 +1,5 @@
+package chatbot;
+
 public interface IGame {
     String getInitialMessage(int quizId);
 

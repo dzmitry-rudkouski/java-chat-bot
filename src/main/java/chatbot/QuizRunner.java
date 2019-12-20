@@ -1,5 +1,7 @@
-import database.DatabaseWorker;
-import database.QuizDataSet;
+package chatbot;
+
+import chatbot.database.DatabaseWorker;
+import chatbot.database.QuizDataSet;
 import org.glassfish.grizzly.utils.Pair;
 
 import java.util.Objects;

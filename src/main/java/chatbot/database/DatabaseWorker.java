@@ -1,4 +1,4 @@
-package database;
+package chatbot.database;
 
 import org.glassfish.grizzly.utils.Pair;
 import org.javatuples.Triplet;

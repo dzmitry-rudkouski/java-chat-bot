@@ -1,4 +1,4 @@
-package database;
+package chatbot.database;
 
 public class QuizDataSet {
     public int id;
