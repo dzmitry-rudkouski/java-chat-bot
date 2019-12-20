@@ -79,7 +79,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 reply = chatBot.answer(update.getMessage().getText(), update.getMessage().getFrom().getId());
             }
 
-            var sendMessage = new SendMessage(
+            SendMessage sendMessage = new SendMessage(
                 update.getMessage().getChatId(),
                 reply.message
             );
@@ -90,7 +90,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 sendMessage.setReplyMarkup(noKeyboard);
 
             if (reply.imageUrl != null && reply.shareText != null) {
-                var sendPhoto = new SendPhoto();
+                SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setChatId(update.getMessage().getChatId());
                 sendPhoto.setPhoto(reply.imageUrl);
 
@@ -121,7 +121,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(true);
 
         List<KeyboardRow> keyboardRows = new ArrayList<>();
-        for (var line : options) {
+        for (List<String> line : options) {
             KeyboardRow keyboardRow = new KeyboardRow();
             for (String part : line) {
                 keyboardRow.add(part);

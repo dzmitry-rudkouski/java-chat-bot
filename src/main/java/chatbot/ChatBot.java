@@ -108,10 +108,10 @@ class ChatBot {
                     return new ChatBotReply(addQuiz);
             case "/list":
             case btnListQuiz:
-                var allQuizzes = getQuizzesList(isPrivileged(userId), userId);
+                List<List<String>> allQuizzes = getQuizzesList(isPrivileged(userId), userId);
                 if (allQuizzes.size() == 0)
                     return new ChatBotReply(noQuizzes + returnToHome, getKeyboard(userId));
-                return new ChatBotReply(quizzesList, allQuizzes);
+                return new ChatBotReply(this.quizzesList, allQuizzes);
             case "/stop":
             case "стоп":
                 if (!runner.isActive(userId))
@@ -125,7 +125,7 @@ class ChatBot {
                 state.put(userId, stateRemoveModerator);
                 return new ChatBotReply(removeModerator, cancelKeyboard);
             case btnGetModerators:
-                var moderatorsList = db.getModerators();
+                ArrayList<String> moderatorsList = db.getModerators();
                 if (moderatorsList.size() == 0)
                     return new ChatBotReply(noModerators + returnToHome, getKeyboard(userId));
                 return new ChatBotReply(String.join("\n", moderatorsList), getKeyboard(userId));
@@ -201,21 +201,21 @@ class ChatBot {
     }
 
     List<List<String>> getQuizzesList(boolean isModerator, long userId) {
-        var quizzes = db.getQuizzesList();
+//        var quizzes = db.getQuizzesList();
         List<List<String>> options = new ArrayList<>();
-        for (var e : quizzes) {
-            if (!isModerator && e.getValue2())
-                continue;
-            options.add(new ArrayList<>());
-            int index = options.size() - 1;
-            options.get(index).add(String.format("%s: %s", e.getValue0(), e.getValue1()));
-            if (isModerator) {
-                options.get(index).add(String.format("%s %s", delete, e.getValue0()));
-                if (e.getValue2() && (admins.contains(userId) || !(userId == db.getAuthorId(e.getValue0())))) {
-                    options.get(index).add(String.format("%s %s", accept, e.getValue0()));
-                }
-            }
-        }
+//        for (var e : quizzes) {
+//            if (!isModerator && e.getValue2())
+//                continue;
+//            options.add(new ArrayList<>());
+//            int index = options.size() - 1;
+//            options.get(index).add(String.format("%s: %s", e.getValue0(), e.getValue1()));
+//            if (isModerator) {
+//                options.get(index).add(String.format("%s %s", delete, e.getValue0()));
+//                if (e.getValue2() && (admins.contains(userId) || !(userId == db.getAuthorId(e.getValue0())))) {
+//                    options.get(index).add(String.format("%s %s", accept, e.getValue0()));
+//                }
+//            }
+//        }
         return options;
     }
 
