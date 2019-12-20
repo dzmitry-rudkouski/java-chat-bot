@@ -12,7 +12,7 @@
     <name>WinxBot</name>
 
     <properties>
-        <jdk.version>11</jdk.version>
+        <jdk.version>8</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <telegrambots.version>4.1</telegrambots.version>
@@ -122,8 +122,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
                 </configuration>
             </plugin>
         </plugins>
