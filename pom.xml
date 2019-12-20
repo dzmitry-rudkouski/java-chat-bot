@@ -126,7 +126,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>chatbot.Main</mainClass>
+                            <mainClass>chatbot.Application</mainClass>
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
                     </archive>

@@ -7,12 +7,12 @@ import org.glassfish.grizzly.utils.Pair;
 import java.util.Objects;
 
 public class QuizRunner implements IGame {
-    protected final String noSuchAnswer = "Такого варианта ответа нет. Попробуй ещё раз";
-    protected final String quizFinished = "Тест пройден. ";
-    protected final String inviteFriend = "\n\nПригласи друга пройти опрос, отправив эту ссылку: https://t.me/%s?start=%d";
-    protected final String quizNotFound = "Опрос не найден либо был удалён.";
-    private DatabaseWorker db;
-    private String         botUsername;
+    protected final String         noSuchAnswer = "Такого варианта ответа нет. Попробуй ещё раз";
+    protected final String         quizFinished = "Тест пройден. ";
+    protected final String         inviteFriend = "\n\nПригласи друга пройти опрос, отправив эту ссылку: https://t.me/%s?start=%d";
+    protected final String         quizNotFound = "Опрос не найден либо был удалён.";
+    private         DatabaseWorker db;
+    private         String         botUsername;
 
     QuizRunner(String botUsername, DatabaseWorker db) {
         this.botUsername = botUsername;

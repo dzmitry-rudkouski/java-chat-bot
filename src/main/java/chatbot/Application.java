@@ -1,19 +1,20 @@
 package chatbot;
 
-import chatbot.database.DatabaseWorker;
+import chatbot.database.DatabaseWorkerImpl;
+import chatbot.database.FakeDatabaseWorker;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.meta.ApiContext;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
-public class Main {
+public class Application {
+
     public static void main(String[] args) {
+
         ApiContextInitializer.init();
-        TelegramBotsApi botsApi = new TelegramBotsApi();
 
         DefaultBotOptions botOptions = ApiContext.getInstance(DefaultBotOptions.class);
 
@@ -21,7 +22,8 @@ public class Main {
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 public PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(System.getenv("PROXY_USER"),
+                    return new PasswordAuthentication(
+                        System.getenv("PROXY_USER"),
                         System.getenv("PROXY_PASS").toCharArray());
                 }
             });
@@ -34,12 +36,18 @@ public class Main {
         }
 
         try {
-            botsApi.registerBot(new TelegramBot(System.getenv("BOT_USERNAME"), System.getenv("BOT_TOKEN"),
-                botOptions, new DatabaseWorker(System.getenv("JDBC_DATABASE_URL")), System.getenv("ADMINS")));
-        } catch (TelegramApiRequestException e) {
+            TelegramBotsApi botsApi = new TelegramBotsApi();
+            botsApi.registerBot(
+                new TelegramBot(
+                    System.getenv("BOT_USERNAME"),
+                    System.getenv("BOT_TOKEN"),
+                    botOptions,
+                    new FakeDatabaseWorker(),
+                    System.getenv("ADMINS")
+                )
+            );
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (NullPointerException e) {
-            System.out.println("Укажите системные переменные.");
         }
     }
 }

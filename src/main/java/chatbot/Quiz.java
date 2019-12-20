@@ -1,6 +1,7 @@
 package chatbot;
 
 import chatbot.database.DatabaseWorker;
+import chatbot.database.DatabaseWorkerImpl;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 

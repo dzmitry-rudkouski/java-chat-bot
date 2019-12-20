@@ -1,6 +1,7 @@
 package chatbot;
 
 import chatbot.database.DatabaseWorker;
+import chatbot.database.DatabaseWorkerImpl;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
@@ -29,14 +30,13 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class TelegramBot extends TelegramLongPollingBot {
-    private static ChatBot chatBot;
 
-    private static String botUsername;
-    private static String botToken;
-    protected final String vkShareUrl = "https://vk.com/share.php?url=%s&title=%s&image=%s";
+    private final ChatBot             chatBot;
+    private final String              botUsername;
+    private final String              botToken;
     private final ReplyKeyboardRemove noKeyboard = new ReplyKeyboardRemove();
 
-    TelegramBot(String username, String token, DefaultBotOptions botOptions, DatabaseWorker db, String adminsString) {
+    public TelegramBot(String username, String token, DefaultBotOptions botOptions, DatabaseWorker db, String adminsString) {
         super(botOptions);
 
         List<Long> admins = new ArrayList<>();
@@ -47,7 +47,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         chatBot = new ChatBot(username, db, admins);
         botUsername = username;
         botToken = token;
-
     }
 
     @Override
@@ -98,12 +97,12 @@ public class TelegramBot extends TelegramLongPollingBot {
                 InlineKeyboardMarkup inlineMarkup = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> inlineRows = new ArrayList<>();
                 List<InlineKeyboardButton> row = new ArrayList<>();
-                row.add(new InlineKeyboardButton()
-                    .setText("Рассказать в VK")
-                    .setUrl(String.format(vkShareUrl,
-                        URLEncoder.encode(String.format("https://t.me/%s", botUsername), StandardCharsets.UTF_8),
-                        URLEncoder.encode(reply.shareText, StandardCharsets.UTF_8),
-                        URLEncoder.encode(reply.imageUrl, StandardCharsets.UTF_8))));
+//                row.add(new InlineKeyboardButton()
+//                    .setText("Рассказать в VK")
+//                    .setUrl(String.format("http://localhost:80",
+//                        URLEncoder.encode(String.format("https://t.me/%s", botUsername), StandardCharsets.UTF_8),
+//                        URLEncoder.encode(reply.shareText, StandardCharsets.UTF_8),
+//                        URLEncoder.encode(reply.imageUrl, StandardCharsets.UTF_8))));
                 inlineRows.add(row);
                 inlineMarkup.setKeyboard(inlineRows);
                 sendPhoto.setReplyMarkup(inlineMarkup);
