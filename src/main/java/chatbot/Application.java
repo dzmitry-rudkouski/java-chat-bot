@@ -1,6 +1,5 @@
 package chatbot;
 
-import chatbot.database.DatabaseWorkerImpl;
 import chatbot.database.FakeDatabaseWorker;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
