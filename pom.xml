@@ -27,6 +27,7 @@
 
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
+        <junit.version>4.12</junit.version>
     </properties>
 
     <dependencies>
@@ -44,18 +45,6 @@
         </dependency>
 
         <dependency>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${orgpostgresql.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit-jupiter-api.version}</version>
@@ -63,16 +52,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.fiit.winx-bot</groupId>
-            <artifactId>bot</artifactId>
-            <version>${bot.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>RELEASE</version>
-            <scope>compile</scope>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -92,6 +75,7 @@
             <artifactId>javatuples</artifactId>
             <version>${javatuples.version}</version>
         </dependency>
+
     </dependencies>
 
     <build>
